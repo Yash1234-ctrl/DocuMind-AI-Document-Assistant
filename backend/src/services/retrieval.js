@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 import Chunk from "../models/Chunk.js";
 import { embedText } from "./embeddings.js";
 
+export const MIN_RETRIEVAL_SCORE = 0.55;
+
+export function filterRelevantChunks(results, minScore = MIN_RETRIEVAL_SCORE) {
+    return results.filter((result) => Number(result.score) >= minScore);
+}
+
 export async function retrieveChunks(workspaceId, question, k = 5) {
     const queryVector = await embedText(question);
 
@@ -13,7 +19,6 @@ export async function retrieveChunks(workspaceId, question, k = 5) {
                 queryVector,
                 numCandidates: 100,
                 limit: k,
-                // aggregate() does not auto-cast, so convert to ObjectId manually
                 filter: { workspaceId: new mongoose.Types.ObjectId(workspaceId) },
             },
         },
@@ -28,5 +33,6 @@ export async function retrieveChunks(workspaceId, question, k = 5) {
         },
     ]);
 
-    return results;
+    console.log("scores:", results.map((r) => Number(r.score).toFixed(3)));
+    return filterRelevantChunks(results, MIN_RETRIEVAL_SCORE);
 }

@@ -7,6 +7,8 @@ import { retrieveChunks } from "../services/retrieval.js";
 import { answerQuestion, streamAnswerQuestion } from "../services/llm.js";
 import { chatLimiter } from "../middleware/rateLimits.js";
 
+export const SMALL_TALK = /^\s*(hi|hello|hey|thanks|thank you|ok|okay|bye|goodbye|good morning|good night)\b[\s!.,a-z]*$/i;
+
 const router = Router({ mergeParams: true });
 router.use(requireAuth);
 
@@ -146,6 +148,14 @@ router.post("/", chatLimiter, async (req, res) => {
         });
     }
 
+    if (SMALL_TALK.test(question)) {
+        const reply = "You're welcome! Ask me anything about your uploaded documents.";
+        convo.messages.push({ role: "user", content: question });
+        convo.messages.push({ role: "assistant", content: reply, sources: [] });
+        await convo.save();
+        return res.json({ conversationId: convo.id, answer: reply, sources: [] });
+    }
+
     const chunks = await retrieveChunks(req.params.workspaceId, question, 5);
 
     if (chunks.length === 0) {
@@ -161,12 +171,15 @@ router.post("/", chatLimiter, async (req, res) => {
 
     const answer = await answerQuestion({ question, chunks, history });
 
-    const sources = chunks.map((c, i) => ({
-        index: i + 1,
-        filename: c.filename,
-        pageNumber: c.pageNumber,
-        snippet: c.content.slice(0, 200),
-    }));
+    const refused = /couldn't find that in your documents/i.test(answer);
+    const sources = refused
+        ? []
+        : chunks.map((c, i) => ({
+            index: i + 1,
+            filename: c.filename,
+            pageNumber: c.pageNumber,
+            snippet: c.content.slice(0, 200),
+        }));
 
     convo.messages.push({ role: "user", content: question });
     convo.messages.push({ role: "assistant", content: answer, sources });
