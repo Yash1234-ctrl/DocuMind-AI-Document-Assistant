@@ -363,12 +363,18 @@ function App() {
         const question = input.trim();
         if (!question || sending || loadingWorkspace || !workspaceId) return;
         setInput("");
-        const assistantId = crypto.randomUUID();
-        setMessages((items) => [
-            ...items,
-            { id: crypto.randomUUID(), role: "user", content: question },
-            { id: assistantId, role: "assistant", content: "", sources: [] },
-        ]);
+        const generateId = () =>
+    crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const assistantId = generateId();
+
+setMessages((items) => [
+    ...items,
+    { id: generateId(), role: "user", content: question },
+    { id: assistantId, role: "assistant", content: "", sources: [] },
+]);
         setSending(true);
         let answer = "";
         try {
