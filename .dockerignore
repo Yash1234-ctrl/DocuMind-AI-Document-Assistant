@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+**/.env
+**/.env.*
+**/node_modules
+**/uploads
+**/dist
+npm-debug.log*
+backend/evaluation/results/

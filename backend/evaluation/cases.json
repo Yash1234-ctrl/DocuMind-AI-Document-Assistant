@@ -1,0 +1,22 @@
+[
+    {
+        "id": "water-cycle-summary",
+        "question": "How does water move through the water cycle?",
+        "expectedDocuments": [
+            "water-cycle-notes.pdf"
+        ],
+        "requiredTerms": [
+            "evapor",
+            "condens",
+            "precipitation"
+        ],
+        "expectRefusal": false
+    },
+    {
+        "id": "out-of-scope-world-cup",
+        "question": "Who won the 2018 World Cup?",
+        "expectedDocuments": [],
+        "requiredTerms": [],
+        "expectRefusal": true
+    }
+]
